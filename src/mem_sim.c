@@ -28,6 +28,17 @@ static uint8_t* phys_memory = NULL;
 static size_t phys_mem_size = 0;
 
 EMSCRIPTEN_KEEPALIVE
+const char* get_log_buffer() {
+    return log_buffer;
+}
+
+EMSCRIPTEN_KEEPALIVE
+void clear_log_buffer() {
+    log_position = 0;
+    log_buffer[0] = '\0';
+}
+
+EMSCRIPTEN_KEEPALIVE
 void init_physical_memory(size_t size_mb) {
     phys_mem_size = size_mb * 1024 * 1024;
     phys_memory = (uint8_t*)calloc(phys_mem_size, 1);
