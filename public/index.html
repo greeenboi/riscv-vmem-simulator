@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>RISC-V VM Simulator</title>
+    <style>
+        canvas { border: 1px solid #000; }
+        .control-panel { margin: 20px; }
+    </style>
+</head>
+<body>
+    <div class="control-panel">
+        <select id="mode">
+            <option value="SV32">SV32</option>
+            <option value="SV39">SV39</option>
+            <option value="SV48">SV48</option>
+        </select>
+        <input type="text" id="va" placeholder="Virtual Address (hex)">
+        <button onclick="translate()">Translate</button>
+    </div>
+    <canvas id="memView" width="800" height="600"></canvas>
+    <script src="sim.js"></script>
+    <script>
+        Module.onRuntimeInitialized = () => {
+            console.log("WASM module loaded");
+        };
+
+        function translate() {
+            const va = document.getElementById('va').value;
+            const mode = document.getElementById('mode').value;
+            const pa = Module.ccall('sv32_translate', 'number', ['number'], [parseInt(va, 16)]);
+            console.log(`Translated PA: 0x${pa.toString(16)}`);
+            updateVisualization(pa);
+        }
+    </script>
+</body>
+</html>
