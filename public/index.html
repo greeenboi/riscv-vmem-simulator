@@ -3,33 +3,65 @@
 <head>
     <title>RISC-V VM Simulator</title>
     <style>
-        canvas { border: 1px solid #000; }
-        .control-panel { margin: 20px; }
+        .container { margin: 20px; font-family: Arial, sans-serif; }
+        #debug { 
+            white-space: pre;
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        input { width: 200px; }
     </style>
 </head>
 <body>
-    <div class="control-panel">
-        <select id="mode">
-            <option value="SV32">SV32</option>
-            <option value="SV39">SV39</option>
-            <option value="SV48">SV48</option>
-        </select>
-        <input type="text" id="va" placeholder="Virtual Address (hex)">
-        <button onclick="translate()">Translate</button>
+    <div class="container">
+        <h2>RISC-V Virtual Memory Simulator</h2>
+        
+        <div>
+            <select id="mode">
+                <option value="SV32">SV32</option>
+            </select>
+            <input type="text" id="va" placeholder="Enter hex address (e.g., 0x40000000)">
+            <button onclick="translate()">Translate</button>
+        </div>
+        
+        <h3>Debug Output:</h3>
+        <div id="debug"></div>
     </div>
-    <canvas id="memView" width="800" height="600"></canvas>
+
     <script src="sim.js"></script>
     <script>
         Module.onRuntimeInitialized = () => {
             console.log("WASM module loaded");
+            Module.ccall('demo_setup', null, [], []);
         };
 
         function translate() {
-            const va = document.getElementById('va').value;
-            const mode = document.getElementById('mode').value;
-            const pa = Module.ccall('sv32_translate', 'number', ['number'], [parseInt(va, 16)]);
-            console.log(`Translated PA: 0x${pa.toString(16)}`);
-            updateVisualization(pa);
+            const debugDiv = document.getElementById('debug');
+            debugDiv.textContent = '';
+            
+            try {
+                const vaInput = document.getElementById('va').value;
+                const va = parseInt(vaInput.replace(/0x/g, ''), 16);
+                
+                if (isNaN(va)) {
+                    throw "Invalid hexadecimal address";
+                }
+
+                const pa = Module.ccall('sv32_translate', 'number', ['number'], [va]);
+                const logs = Module.UTF8ToString(Module.AsciiToString(Module.Pointer_stringify(Module.getLogBuffer())));
+                
+                debugDiv.textContent = logs;
+                debugDiv.textContent += `\nResult: ${
+                    pa === 0xFFFFFFFFFFFFFFFF ? 
+                    'Page Fault!' : 
+                    'PA: 0x' + pa.toString(16).toUpperCase()
+                }`;
+                
+            } catch (e) {
+                debugDiv.textContent = 'Error: ' + e;
+            }
         }
     </script>
 </body>
