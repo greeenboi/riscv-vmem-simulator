@@ -23,7 +23,7 @@
                 <option value="SV32">SV32</option>
             </select>
             <input type="text" id="va" placeholder="Enter hex address (e.g., 0x40000000)">
-            <button onclick="translate()">Translate</button>
+            <button id="translate-btn">Translate</button>
         </div>
         
         <h3>Debug Output:</h3>
@@ -32,37 +32,51 @@
 
     <script src="sim.js"></script>
     <script>
+       document.addEventListener('DOMContentLoaded', () => {
+        const translateBtn = document.getElementById('translate-btn');
+        let isModuleReady = false;
+
         Module.onRuntimeInitialized = () => {
             console.log("WASM module loaded");
             Module.ccall('demo_setup', null, [], []);
+            isModuleReady = true;
         };
 
-        function translate() {
+        function handleTranslate() {
+            if (!isModuleReady) {
+                alert("WASM module not loaded yet!");
+                return;
+            }
+
             const debugDiv = document.getElementById('debug');
             debugDiv.textContent = '';
             
             try {
                 const vaInput = document.getElementById('va').value;
-                const va = parseInt(vaInput.replace(/0x/g, ''), 16);
+                const va = parseInt(vaInput, 16);
                 
                 if (isNaN(va)) {
                     throw "Invalid hexadecimal address";
                 }
 
-                const pa = Module.ccall('sv32_translate', 'number', ['number'], [va]);
-                const logs = Module.UTF8ToString(Module.AsciiToString(Module.Pointer_stringify(Module.getLogBuffer())));
+                const pa = Module.ccall(
+                    'sv32_translate', 
+                    'number', 
+                    ['number'],  // Now takes only VA
+                    [va]
+                );
                 
-                debugDiv.textContent = logs;
-                debugDiv.textContent += `\nResult: ${
-                    pa === 0xFFFFFFFFFFFFFFFF ? 
-                    'Page Fault!' : 
-                    'PA: 0x' + pa.toString(16).toUpperCase()
-                }`;
+                // Get C printf output
+                const logs = Module.UTF8ToString(Module.AsciiToString(Module.Pointer_stringify(Module.getLogBuffer())));
+                debugDiv.textContent = logs + `\nResult: 0x${pa.toString(16)}`;
                 
             } catch (e) {
                 debugDiv.textContent = 'Error: ' + e;
             }
         }
+
+            translateBtn.addEventListener('click', handleTranslate);
+        });    
     </script>
 </body>
 </html>

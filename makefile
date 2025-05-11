@@ -1,6 +1,6 @@
 CC = emcc
 CFLAGS = -Os -s WASM=1 \
-         -s EXPORTED_FUNCTIONS="['_sv32_translate','_demo_setup','_init_memory_system','_getLogBuffer']" \
+         -s EXPORTED_FUNCTIONS="['_sv32_translate','_demo_setup']"\
          -s EXPORTED_RUNTIME_METHODS="['ccall','cwrap']" \
          -s ASSERTIONS=1 \
          -s SAFE_HEAP=1

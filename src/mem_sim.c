@@ -21,7 +21,7 @@ typedef struct {
     PageTable* root;
     uint8_t mode;
 } MemorySystem;
-
+static MemorySystem g_mem;
 EMSCRIPTEN_KEEPALIVE
 void init_memory_system(MemorySystem* mem, uint8_t mode) {
     mem->mode = mode;
@@ -32,6 +32,11 @@ void init_memory_system(MemorySystem* mem, uint8_t mode) {
 
 EMSCRIPTEN_KEEPALIVE
 uint64_t sv32_translate(MemorySystem* mem, uint32_t va) {
+    if (!g_mem.root || !g_mem.root->entries) {
+        printf("Memory system not initialized!\n");
+        return 0xFFFFFFFFFFFFFFFF;
+    }
+
     printf("Starting translation for VA: 0x%08x\n", va);
     
     uint32_t vpn1 = (va >> 22) & 0x3FF;
@@ -77,16 +82,20 @@ uint64_t sv32_translate(MemorySystem* mem, uint32_t va) {
     return (pte0.ppn << 12) | (va & 0xFFF);
 }
 
+
+
 EMSCRIPTEN_KEEPALIVE
 void demo_setup() {
-    MemorySystem mem;
-    init_memory_system(&mem, SV32);
+    init_memory_system(&g_mem, SV32);
     
-    // Create mapping: VA 0x40000000 → PA 0x10000000
+    // Allocate physical memory for root page table
+    uint64_t root_ppn = 0x1000;  // Arbitrary physical address
+    g_mem.root = (PageTable*)(root_ppn << 12);
+    g_mem.root->entries = (PTE*)calloc(1024, sizeof(PTE));
+    
+    // Create valid mapping: VA 0x40000000 → PA 0x10000000
     PTE entry;
-    entry.ppn = 0x10000;  // 0x10000 << 12 = 0x10000000
+    entry.ppn = 0x10000;  // 0x10000000 >> 12
     entry.flags = 0x01 | 0x02;  // Valid + Readable
-    mem.root->entries[0x100] = entry;
-    
-    printf("Demo setup complete\n");
+    g_mem.root->entries[0x100] = entry;  // VPN1=0x100
 }
