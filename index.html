@@ -3,14 +3,81 @@
 <head>
     <title>RISC-V VM Simulator</title>
     <style>
-        body { font-family: Arial, sans-serif; padding: 20px; }
-        #debug { white-space: pre; font-family: monospace; background: #f0f0f0; padding: 10px; margin-top: 10px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 30px;
+            max-width: 900px;
+            margin: 0 auto;
+            background-color: #f9f9f9;
+            color: #333;
+            line-height: 1.6;
+        }
+        
+        h2 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .input-container {
+            display: flex;
+            margin-bottom: 20px;
+            gap: 10px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus {
+            border-color: #3498db;
+            outline: none;
+        }
+        
+        button {
+            background-color: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        button:hover {
+            background-color: #2980b9;
+        }
+        
+        button:disabled {
+            background-color: #95a5a6;
+            cursor: not-allowed;
+        }
+        
+        #debug {
+            white-space: pre;
+            font-family: 'Courier New', monospace;
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 6px;
+            overflow-x: auto;
+            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.1);
+        }
     </style>
 </head>
 <body>
     <h2>RISC-V Virtual Memory Simulator</h2>
     
-    <div>
+    <div class="input-container">
         <input type="text" id="va" placeholder="Enter VA (e.g., 0x40000000)">
         <button id="translate-btn">Translate</button>
     </div>
