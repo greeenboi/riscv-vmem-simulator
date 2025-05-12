@@ -76,8 +76,11 @@
 </head>
 <body>
     <h2>RISC-V Virtual Memory Simulator</h2>
-    
-    <div class="input-container">
+      <div class="input-container">
+        <select id="mode-select" style="padding: 10px; border-radius: 4px; border: 1px solid #ccc;">
+            <option value="sv32">SV32</option>
+            <option value="sv39">SV39</option>
+        </select>
         <input type="text" id="va" placeholder="Enter VA (e.g., 0x40000000)">
         <button id="translate-btn">Translate</button>
     </div>
@@ -86,10 +89,25 @@
 
     <script src="sim.js"></script>
     <script>
+        let currentMode = 'sv32';
+        
         Module.onRuntimeInitialized = () => {
-            Module.ccall('demo_setup', null, [], []);
+            setupMode('sv32');
             document.getElementById('translate-btn').disabled = false;
         };
+        
+        function setupMode(mode) {
+            currentMode = mode;
+            if (mode === 'sv32') {
+                Module.ccall('demo_setup', null, [], []);
+            } else if (mode === 'sv39') {
+                Module.ccall('demo_setup_sv39', null, [], []);
+            }
+        }
+
+        document.getElementById('mode-select').addEventListener('change', function() {
+            setupMode(this.value);
+        });
 
         document.getElementById('translate-btn').addEventListener('click', () => {
             const vaInput = document.getElementById('va').value;
@@ -100,7 +118,14 @@
                 return;
             }
 
-            const pa = Module.ccall('sv32_translate', 'number', ['number'], [va]);
+            let pa;
+            if (currentMode === 'sv32') {
+                pa = Module.ccall('sv32_translate', 'number', ['number'], [va]);
+            } else if (currentMode === 'sv39') {
+                // For SV39, handle BigInt properly with wrappers
+                pa = Module.ccall('sv39_translate', 'number', ['number'], [va]);
+            }
+            
             const log_ptr = Module.ccall('get_log_buffer', 'number', [], []);
             const logs = Module.UTF8ToString(log_ptr);            
             document.getElementById('debug').textContent = logs + 
